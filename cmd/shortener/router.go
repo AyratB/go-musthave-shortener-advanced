@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
+	"net/http/pprof"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -14,7 +16,12 @@ import (
 func newRouter(i *app.Instance) http.Handler {
 	r := chi.NewRouter()
 
+	r.Use(middleware.RequestID)
 	r.Use(gzipMiddleware, authMiddleware)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
 	r.Post("/", i.ShortenHandler)
 	r.Post("/api/shorten", i.ShortenAPIHandler)
 	r.Post("/api/shorten/batch", i.BatchShortenAPIHandler)
@@ -22,6 +29,10 @@ func newRouter(i *app.Instance) http.Handler {
 	r.Get("/{id}", i.ExpandHandler)
 	r.Get("/api/user/urls", i.UserURLsHandler)
 	r.Get("/ping", i.PingHandler)
+
+	r.Get("/debug/pprof/", pprof.Index)
+	r.Get("/debug/pprof/cmdline", pprof.Cmdline)
+	r.Get("/debug/pprof/profile", pprof.Profile)
 
 	return r
 }
@@ -34,8 +45,10 @@ func gzipMiddleware(h http.Handler) http.Handler {
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
 		if supportsGzip {
 			cw := newCompressWriter(w)
-			ow = cw
 			defer cw.Close()
+
+			w.Header().Set("Content-Encoding", "gzip")
+			ow = cw
 		}
 
 		contentEncoding := r.Header.Get("Content-Encoding")
