@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
+	"sync"
 
 	"github.com/gofrs/uuid"
 )
@@ -15,6 +17,7 @@ var _ AuthStore = (*InMemory)(nil)
 type InMemory struct {
 	store     map[string]*url.URL
 	userStore map[string]map[string]*url.URL
+	mutex     sync.RWMutex
 }
 
 // NewInMemory create new InMemory instance
@@ -22,11 +25,14 @@ func NewInMemory() *InMemory {
 	return &InMemory{
 		store:     make(map[string]*url.URL),
 		userStore: make(map[string]map[string]*url.URL),
+		mutex:     sync.RWMutex{},
 	}
 }
 
 func (m *InMemory) Save(_ context.Context, u *url.URL) (id string, err error) {
-	id = fmt.Sprintf("%x", len(m.store))
+
+	id = strconv.Itoa(len(m.store))
+
 	m.store[id] = u
 	return id, nil
 }
