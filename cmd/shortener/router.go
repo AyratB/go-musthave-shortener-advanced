@@ -33,6 +33,9 @@ func newRouter(i *app.Instance) http.Handler {
 	r.Get("/debug/pprof/", pprof.Index)
 	r.Get("/debug/pprof/cmdline", pprof.Cmdline)
 	r.Get("/debug/pprof/profile", pprof.Profile)
+	r.Get("/debug/pprof/symbol", pprof.Symbol)
+	r.Get("/debug/pprof/trace", pprof.Trace)
+	r.Get("/debug/pprof/{cmd}", pprof.Index)
 
 	return r
 }
