@@ -14,6 +14,7 @@ import (
 var _ Store = (*InMemory)(nil)
 var _ AuthStore = (*InMemory)(nil)
 
+// InMemory describe in-memory store instance
 type InMemory struct {
 	store     map[string]*url.URL
 	userStore map[string]map[string]*url.URL
@@ -29,6 +30,7 @@ func NewInMemory() *InMemory {
 	}
 }
 
+// Save store in memory
 func (m *InMemory) Save(_ context.Context, u *url.URL) (id string, err error) {
 
 	id = strconv.Itoa(len(m.store))
@@ -37,6 +39,7 @@ func (m *InMemory) Save(_ context.Context, u *url.URL) (id string, err error) {
 	return id, nil
 }
 
+// SaveBatch store batch in memory
 func (m *InMemory) SaveBatch(_ context.Context, urls []*url.URL) (ids []string, err error) {
 	for _, u := range urls {
 		id := fmt.Sprintf("%x", len(m.store))
@@ -49,6 +52,7 @@ func (m *InMemory) SaveBatch(_ context.Context, urls []*url.URL) (ids []string, 
 	return
 }
 
+// Load store in memory map
 func (m *InMemory) Load(_ context.Context, id string) (u *url.URL, err error) {
 	u, ok := m.store[id]
 	if !ok {
@@ -60,6 +64,7 @@ func (m *InMemory) Load(_ context.Context, id string) (u *url.URL, err error) {
 	return u, nil
 }
 
+// SaveUser store in memory user
 func (m *InMemory) SaveUser(ctx context.Context, uid uuid.UUID, u *url.URL) (id string, err error) {
 	id, err = m.Save(ctx, u)
 	if err != nil {
@@ -72,6 +77,7 @@ func (m *InMemory) SaveUser(ctx context.Context, uid uuid.UUID, u *url.URL) (id 
 	return id, nil
 }
 
+// SaveUserBatch store in memory user batch
 func (m *InMemory) SaveUserBatch(ctx context.Context, uid uuid.UUID, urls []*url.URL) (ids []string, err error) {
 	ids, err = m.SaveBatch(ctx, urls)
 	if err != nil {
@@ -86,6 +92,7 @@ func (m *InMemory) SaveUserBatch(ctx context.Context, uid uuid.UUID, urls []*url
 	return ids, nil
 }
 
+// LoadUser store return user from store
 func (m *InMemory) LoadUser(ctx context.Context, uid uuid.UUID, id string) (u *url.URL, err error) {
 	urls, err := m.LoadUsers(ctx, uid)
 	if err != nil {
@@ -101,6 +108,7 @@ func (m *InMemory) LoadUser(ctx context.Context, uid uuid.UUID, id string) (u *u
 	return u, nil
 }
 
+// LoadUsers store return users from store
 func (m *InMemory) LoadUsers(_ context.Context, uid uuid.UUID) (urls map[string]*url.URL, err error) {
 	urls, ok := m.userStore[uid.String()]
 	if !ok {
@@ -116,6 +124,7 @@ func (m *InMemory) LoadUsers(_ context.Context, uid uuid.UUID) (urls map[string]
 	return res, nil
 }
 
+// DeleteUsers delete users from store
 func (m *InMemory) DeleteUsers(_ context.Context, uid uuid.UUID, ids ...string) error {
 	for _, id := range ids {
 		userID := uid.String()
@@ -127,10 +136,12 @@ func (m *InMemory) DeleteUsers(_ context.Context, uid uuid.UUID, ids ...string) 
 	return nil
 }
 
+// Close return nil
 func (m *InMemory) Close() error {
 	return nil
 }
 
+// Ping return nil
 func (m *InMemory) Ping(_ context.Context) error {
 	return nil
 }

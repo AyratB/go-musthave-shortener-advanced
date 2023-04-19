@@ -1,3 +1,4 @@
+// Package store contains useful entities.
 package store
 
 import (

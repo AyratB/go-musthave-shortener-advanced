@@ -1,3 +1,4 @@
+// Package config contains configuration for application.
 package config
 
 import (
@@ -14,6 +15,7 @@ var (
 	DatabaseDSN = ""
 )
 
+// Parse reads the configuration from the command line flags, environment variables and a configuration file (with priority)
 func Parse() {
 	flag.StringVar(&RunPort, "a", RunPort, "port to run server")
 	flag.StringVar(&BaseURL, "b", BaseURL, "base URL for shorten URL response")

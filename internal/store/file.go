@@ -23,6 +23,7 @@ type gobStore struct {
 	UserHot map[string]map[string]*url.URL
 }
 
+// FileStore describe file store instance
 type FileStore struct {
 	store   *gobStore
 	enc     *gob.Encoder
@@ -56,12 +57,14 @@ func NewFileStore(filepath string) (*FileStore, error) {
 	}, nil
 }
 
+// Save store file
 func (f *FileStore) Save(_ context.Context, u *url.URL) (id string, err error) {
 	id = fmt.Sprintf("%x", len(f.store.Hot))
 	f.store.Hot[id] = u
 	return id, f.flush()
 }
 
+// SaveBatch store batch
 func (f *FileStore) SaveBatch(_ context.Context, urls []*url.URL) (ids []string, err error) {
 	for _, u := range urls {
 		id := fmt.Sprintf("%x", len(f.store.Hot))
@@ -74,6 +77,7 @@ func (f *FileStore) SaveBatch(_ context.Context, urls []*url.URL) (ids []string,
 	return ids, f.flush()
 }
 
+// Load store from map
 func (f *FileStore) Load(_ context.Context, id string) (u *url.URL, err error) {
 	u, ok := f.store.Hot[id]
 	if !ok {
@@ -85,6 +89,7 @@ func (f *FileStore) Load(_ context.Context, id string) (u *url.URL, err error) {
 	return u, nil
 }
 
+// SaveUser store user
 func (f *FileStore) SaveUser(ctx context.Context, uid uuid.UUID, u *url.URL) (id string, err error) {
 	id, err = f.Save(ctx, u)
 	if err != nil {
@@ -97,6 +102,7 @@ func (f *FileStore) SaveUser(ctx context.Context, uid uuid.UUID, u *url.URL) (id
 	return id, f.flush()
 }
 
+// SaveUserBatch store user batch
 func (f *FileStore) SaveUserBatch(ctx context.Context, uid uuid.UUID, urls []*url.URL) (ids []string, err error) {
 	ids, err = f.SaveBatch(ctx, urls)
 	if err != nil {
@@ -111,6 +117,7 @@ func (f *FileStore) SaveUserBatch(ctx context.Context, uid uuid.UUID, urls []*ur
 	return ids, f.flush()
 }
 
+// LoadUser load user
 func (f *FileStore) LoadUser(ctx context.Context, uid uuid.UUID, id string) (u *url.URL, err error) {
 	urls, err := f.LoadUsers(ctx, uid)
 	if err != nil {
@@ -126,6 +133,7 @@ func (f *FileStore) LoadUser(ctx context.Context, uid uuid.UUID, id string) (u *
 	return u, nil
 }
 
+// LoadUsers load users
 func (f *FileStore) LoadUsers(_ context.Context, uid uuid.UUID) (urls map[string]*url.URL, err error) {
 	urls, ok := f.store.UserHot[uid.String()]
 	if !ok {
@@ -140,6 +148,7 @@ func (f *FileStore) LoadUsers(_ context.Context, uid uuid.UUID) (urls map[string
 	return res, nil
 }
 
+// DeleteUsers delete users
 func (f *FileStore) DeleteUsers(_ context.Context, uid uuid.UUID, ids ...string) error {
 	for _, id := range ids {
 		userID := uid.String()
@@ -151,6 +160,7 @@ func (f *FileStore) DeleteUsers(_ context.Context, uid uuid.UUID, ids ...string)
 	return f.flush()
 }
 
+// Close file closing
 func (f *FileStore) Close() error {
 	if err := f.flush(); err != nil {
 		return fmt.Errorf("cannot flush data to file: %w", err)
@@ -158,6 +168,7 @@ func (f *FileStore) Close() error {
 	return f.persist.Close()
 }
 
+// Ping check file
 func (f *FileStore) Ping(_ context.Context) error {
 	if f.persist.Fd() == ^(uintptr(0)) {
 		return errors.New("underlying file has been closed")
