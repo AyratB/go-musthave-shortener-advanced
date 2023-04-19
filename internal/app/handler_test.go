@@ -212,5 +212,20 @@ func BenchmarkShortener(b *testing.B) {
 			_, _ = instance.shorten(context.Background(), u)
 		}
 	})
+}
 
+func ExampleShorten() {
+
+	storage := store.NewInMemory()
+	defer storage.Close()
+
+	instance := NewInstance(config.BaseURL, storage)
+
+	url, _ := url.Parse("https://practicum.yandex.ru/")
+
+	id, _ := instance.shorten(context.Background(), url)
+	fmt.Println(id)
+
+	// Output:
+	// "http://localhost:8080/0"
 }
