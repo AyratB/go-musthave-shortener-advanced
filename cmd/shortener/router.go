@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"net/http/pprof"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gofrs/uuid"
 
 	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/app"

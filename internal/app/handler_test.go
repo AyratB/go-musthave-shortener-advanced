@@ -5,20 +5,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/auth"
-	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/config"
-	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/store"
-	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/models"
-	"github.com/go-chi/chi/v5"
-	"github.com/gofrs/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/auth"
+	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/config"
+	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/store"
+	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/models"
 )
 
 func Test_ShortenAPIHandler(t *testing.T) {
