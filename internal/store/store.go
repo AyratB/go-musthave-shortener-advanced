@@ -13,6 +13,7 @@ var (
 	ErrDeleted = errors.New("record deleted")
 )
 
+// Store interface
 type Store interface {
 	io.Closer
 
@@ -21,12 +22,14 @@ type Store interface {
 	Ping(ctx context.Context) error
 }
 
+// BatchStore interface
 type BatchStore interface {
 	Store
 
 	SaveBatch(ctx context.Context, urls []*url.URL) (ids []string, err error)
 }
 
+// AuthStore interface
 type AuthStore interface {
 	BatchStore
 

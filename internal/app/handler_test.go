@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gofrs/uuid"
@@ -15,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/auth"
+	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/config"
 	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/store"
 	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/models"
 )
@@ -169,4 +173,61 @@ func Test_userURLs(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, w.Body.Bytes())
 		})
 	}
+}
+
+func randStringBytes() string {
+
+	b := make([]byte, letterCount)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+
+	return string(b)
+}
+
+const (
+	letterBytes = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letterCount = 8
+)
+
+func BenchmarkShortener(b *testing.B) {
+
+	rand.Seed(time.Now().UnixNano())
+
+	storage := store.NewInMemory()
+	defer storage.Close()
+
+	instance := NewInstance(config.BaseURL, storage)
+
+	b.ResetTimer()
+
+	b.Run("check", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+
+			b.StopTimer()
+
+			rawUrl := fmt.Sprintf("https://%s.com", randStringBytes())
+			u, _ := url.Parse(rawUrl)
+
+			b.StartTimer()
+
+			_, _ = instance.shorten(context.Background(), u)
+		}
+	})
+}
+
+func ExampleShorten() {
+
+	storage := store.NewInMemory()
+	defer storage.Close()
+
+	instance := NewInstance(config.BaseURL, storage)
+
+	url, _ := url.Parse("https://practicum.yandex.ru/")
+
+	id, _ := instance.shorten(context.Background(), url)
+	fmt.Println(id)
+
+	// Output:
+	// "http://localhost:8080/0"
 }

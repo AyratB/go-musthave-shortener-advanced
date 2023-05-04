@@ -1,3 +1,4 @@
+// Package auth contains auth settings.
 package auth
 
 import (
@@ -14,6 +15,7 @@ import (
 	"github.com/Yandex-Practicum/go-musthave-shortener-trainer/internal/config"
 )
 
+// EncodeUID encode uid
 func EncodeUID(uid uuid.UUID) ([]byte, error) {
 	c, err := aes.NewCipher(config.AuthSecret)
 	if err != nil {
@@ -34,6 +36,7 @@ func EncodeUID(uid uuid.UUID) ([]byte, error) {
 	return cyphertext, nil
 }
 
+// EncodeUIDToHex encode uid to hex
 func EncodeUIDToHex(uid uuid.UUID) (string, error) {
 	b, err := EncodeUID(uid)
 	if err != nil {
@@ -42,6 +45,7 @@ func EncodeUIDToHex(uid uuid.UUID) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
+// DecodeUID decode uid to hex
 func DecodeUID(ciphertext []byte) (*uuid.UUID, error) {
 	c, err := aes.NewCipher(config.AuthSecret)
 	if err != nil {
@@ -71,6 +75,7 @@ func DecodeUID(ciphertext []byte) (*uuid.UUID, error) {
 	return &uid, nil
 }
 
+// DecodeUIDFromHex decode uid from hex
 func DecodeUIDFromHex(s string) (*uuid.UUID, error) {
 	h, err := hex.DecodeString(s)
 	if err != nil {

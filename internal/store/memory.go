@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
+	"sync"
 
 	"github.com/gofrs/uuid"
 )
@@ -12,9 +14,11 @@ import (
 var _ Store = (*InMemory)(nil)
 var _ AuthStore = (*InMemory)(nil)
 
+// InMemory describe in-memory store instance
 type InMemory struct {
 	store     map[string]*url.URL
 	userStore map[string]map[string]*url.URL
+	mutex     sync.RWMutex
 }
 
 // NewInMemory create new InMemory instance
@@ -22,16 +26,27 @@ func NewInMemory() *InMemory {
 	return &InMemory{
 		store:     make(map[string]*url.URL),
 		userStore: make(map[string]map[string]*url.URL),
+		mutex:     sync.RWMutex{},
 	}
 }
 
+// Save store in memory
 func (m *InMemory) Save(_ context.Context, u *url.URL) (id string, err error) {
-	id = fmt.Sprintf("%x", len(m.store))
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	id = strconv.Itoa(len(m.store))
+
 	m.store[id] = u
 	return id, nil
 }
 
+// SaveBatch store batch in memory
 func (m *InMemory) SaveBatch(_ context.Context, urls []*url.URL) (ids []string, err error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	for _, u := range urls {
 		id := fmt.Sprintf("%x", len(m.store))
 		m.store[id] = u
@@ -43,7 +58,11 @@ func (m *InMemory) SaveBatch(_ context.Context, urls []*url.URL) (ids []string, 
 	return
 }
 
+// Load store in memory map
 func (m *InMemory) Load(_ context.Context, id string) (u *url.URL, err error) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
 	u, ok := m.store[id]
 	if !ok {
 		return nil, ErrNotFound
@@ -54,8 +73,13 @@ func (m *InMemory) Load(_ context.Context, id string) (u *url.URL, err error) {
 	return u, nil
 }
 
+// SaveUser store in memory user
 func (m *InMemory) SaveUser(ctx context.Context, uid uuid.UUID, u *url.URL) (id string, err error) {
 	id, err = m.Save(ctx, u)
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	if err != nil {
 		return "", fmt.Errorf("cannot save URL to shared store: %w", err)
 	}
@@ -66,7 +90,11 @@ func (m *InMemory) SaveUser(ctx context.Context, uid uuid.UUID, u *url.URL) (id 
 	return id, nil
 }
 
+// SaveUserBatch store in memory user batch
 func (m *InMemory) SaveUserBatch(ctx context.Context, uid uuid.UUID, urls []*url.URL) (ids []string, err error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	ids, err = m.SaveBatch(ctx, urls)
 	if err != nil {
 		return nil, fmt.Errorf("cannot save URLs to shared store: %w", err)
@@ -80,7 +108,11 @@ func (m *InMemory) SaveUserBatch(ctx context.Context, uid uuid.UUID, urls []*url
 	return ids, nil
 }
 
+// LoadUser store return user from store
 func (m *InMemory) LoadUser(ctx context.Context, uid uuid.UUID, id string) (u *url.URL, err error) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
 	urls, err := m.LoadUsers(ctx, uid)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load user urls: %w", err)
@@ -95,7 +127,11 @@ func (m *InMemory) LoadUser(ctx context.Context, uid uuid.UUID, id string) (u *u
 	return u, nil
 }
 
+// LoadUsers store return users from store
 func (m *InMemory) LoadUsers(_ context.Context, uid uuid.UUID) (urls map[string]*url.URL, err error) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
 	urls, ok := m.userStore[uid.String()]
 	if !ok {
 		return nil, ErrNotFound
@@ -110,7 +146,11 @@ func (m *InMemory) LoadUsers(_ context.Context, uid uuid.UUID) (urls map[string]
 	return res, nil
 }
 
+// DeleteUsers delete users from store
 func (m *InMemory) DeleteUsers(_ context.Context, uid uuid.UUID, ids ...string) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	for _, id := range ids {
 		userID := uid.String()
 		if _, ok := m.userStore[userID]; ok {
@@ -121,10 +161,12 @@ func (m *InMemory) DeleteUsers(_ context.Context, uid uuid.UUID, ids ...string) 
 	return nil
 }
 
+// Close return nil
 func (m *InMemory) Close() error {
 	return nil
 }
 
+// Ping return nil
 func (m *InMemory) Ping(_ context.Context) error {
 	return nil
 }
